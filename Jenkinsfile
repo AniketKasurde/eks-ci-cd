@@ -13,7 +13,7 @@ pipeline {
         stage("Checkout Code") {
             steps {
                 git branch: "main",
-                    url: "https://github.com/<your-github-username>/eks-cicd.git"
+                    url: "https://github.com/AniketKasurde/eks-ci-cd.git"
             }
         }
 
