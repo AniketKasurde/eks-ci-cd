@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = "ap-south-1"
-        ECR_REPO = "60022212905.dkr.ecr.ap-south-1.amazonaws.com/flask-app"
+        ECR_REPO = "60022212905.dkr.ecr.ap-south-1.amazonaws.com"
         IMAGE_TAG = "latest"
         CLUSTER_NAME = "devops-eks-cluster"
     }
