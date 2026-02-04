@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = "ap-south-1"
-        ECR_REPO = "60022212905.dkr.ecr.ap-south-1.amazonaws.com"
+        ECR_REPO = "760022212905.dkr.ecr.ap-south-1.amazonaws.com/flask-app:latest"
         IMAGE_TAG = "latest"
         CLUSTER_NAME = "devops-eks-cluster"
     }
@@ -13,21 +13,18 @@ pipeline {
         stage("Checkout Code") {
             steps {
                 git branch: "main",
-                    url: "https://github.com/AniketKasurde/eks-ci-cd.git"
+                    url: "https://github.com/<your-github-username>/eks-cicd.git"
             }
         }
 
         stage("Login to ECR") {
-    steps {
-        sh """
-        TOKEN=\$(aws ecr get-login-password --region ap-south-1)
-        echo \$TOKEN | docker login \
-          --username AWS \
-          --password-stdin 60022212905.dkr.ecr.ap-south-1.amazonaws.com
-        """
-    }
-}
-
+            steps {
+                sh """
+                aws ecr get-login-password --region $AWS_REGION | \
+                docker login --username AWS --password-stdin $ECR_REPO
+                """
+            }
+        }
 
         stage("Build Docker Image") {
             steps {
