@@ -1,118 +1,68 @@
-# CI/CD Pipeline for Flask Application on AWS EKS
+# 🚀 EKS CI/CD Project (Terraform + Jenkins)
 
-This project demonstrates an end-to-end **Infrastructure as Code + CI/CD + Kubernetes** workflow on AWS using Terraform and Jenkins.
+This is an end-to-end DevOps project where I automated application deployment on AWS using **Terraform, Jenkins, Docker, and Kubernetes (EKS).**
 
-It provisions cloud infrastructure automatically, builds a containerized application, pushes images to ECR, and deploys them to an Amazon EKS cluster through an automated Jenkins pipeline triggered by GitHub webhooks.
-
----
-
-## 🚀 Architecture Overview
-
-The solution consists of four major components:
-
-### 1️⃣ Infrastructure (Terraform)
-Terraform provisions the following AWS resources:
-
-- **VPC** with public subnets across two availability zones  
-- Internet Gateway and route tables  
-- **Amazon EKS Cluster** with managed node group  
-- **Amazon ECR repository** for container images  
-- **Jenkins EC2 instance** with:
-  - Docker  
-  - AWS CLI  
-  - kubectl  
-  - IAM role-based access (no hardcoded credentials)  
-- Security groups for secure access
-
-Everything is created using a single Terraform configuration (`main.tf`).
+The goal of this project was to build a real-world CI/CD pipeline similar to what is used in production environments.
 
 ---
 
-### 2️⃣ Application
+## ✅ What I built
 
-A simple Python Flask application is containerized using Docker.
+### ☁️ Infrastructure (Terraform)
+Terraform automatically creates:
 
-Key files:
-app/
-├── app.py
-├── Dockerfile
-└── requirements.txt
+- VPC, Subnets, Route Tables, and Internet Gateway  
+- EKS Cluster + Worker Nodes  
+- ECR repository for Docker images  
+- EC2 instance running Jenkins  
+- Required IAM roles and security groups  
 
+### 🤖 Jenkins Automation
 
-The app listens on port **5000** inside the container.
+Jenkins is installed automatically on EC2 using a **user-data script**, which includes:
 
----
+- Jenkins  
+- Docker  
+- AWS CLI  
+- kubectl  
 
-### 3️⃣ CI/CD Pipeline (Jenkins)
+No manual package installation is required.
 
-Jenkins runs on an EC2 instance bootstrapped via **user-data script**.
+### 🔁 CI/CD Pipeline
 
-The pipeline performs:
+Jenkins pipeline does the following:
 
-1. Checkout code from GitHub  
-2. Build Docker image  
-3. Authenticate to AWS ECR  
-4. Push image to ECR  
-5. Update EKS kubeconfig  
-6. Deploy to EKS using Kubernetes manifests  
+1. Pulls code from GitHub  
+2. Builds a Docker image  
+3. Pushes the image to AWS ECR  
+4. Updates kubeconfig  
+5. Deploys application to EKS using Kubernetes manifests  
 
-Pipeline file: `Jenkinsfile`
+### 🔔 GitHub Webhook
 
----
-
-### 4️⃣ Kubernetes Deployment
-
-The application is deployed to EKS using:
-
-k8s/
-├── deployment.yaml
-└── service.yaml
-
-
-- Uses a **LoadBalancer Service** to expose the app publicly  
-- Runs as a replicated Deployment inside the cluster  
-
----
-
-## 🔁 GitHub Webhook Automation
-
-The pipeline is automatically triggered on every push to the `main` branch via a GitHub webhook:
-
-GitHub push → Jenkins → ECR → EKS
+- Every push to the `main` branch automatically triggers the Jenkins pipeline.  
+- No manual build needed.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|------|------------|
-| Cloud | AWS |
-| IaC | Terraform |
-| CI/CD | Jenkins |
-| Container | Docker |
-| Registry | Amazon ECR |
-| Orchestration | Kubernetes (EKS) |
-| Source Control | GitHub |
-| App | Python Flask |
+| Tool | Purpose |
+|------|---------|
+| AWS | Cloud platform |
+| Terraform | Infrastructure as Code |
+| Jenkins | CI/CD automation |
+| Docker | Containerization |
+| EKS | Kubernetes cluster |
+| ECR | Image registry |
+| Kubernetes | App orchestration |
+| GitHub | Source control |
 
 ---
 
-## ▶️ How to Run (High Level)
+## 🔄 High-Level Workflow
 
-1. Clone this repository  
-2. Create an AWS key pair named `ci-cd-key`  
-3. Run:
-terraform init
-terraform apply
-4. Access Jenkins at:
-http://<ec2-public-ip>:8080
-5. Configure GitHub webhook:
-http://<ec2-public-ip>:8080/github-webhook/
-
-6. Push to `main` — the pipeline runs automatically 🚀
-
----
+GitHub → Jenkins → Docker Build → ECR → EKS Deployment
 
 ## 👤 Author
 **Aniket Kasurde**  
-
