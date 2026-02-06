@@ -107,6 +107,11 @@ resource "aws_eks_cluster" "eks" {
     ]
   }
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
+
   tags = {
     Name = "devops-eks-cluster"
   }
@@ -207,16 +212,115 @@ resource "aws_security_group" "jenkins_sg" {
   }
 }
 
+#IAM role for Jenkins EC2
+resource "aws_iam_role" "jenkins_role" {
+  name = "jenkins-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "jenkins-ec2-role"
+  }
+}
+
+resource "aws_iam_instance_profile" "jenkins_profile" {
+  name = "jenkins-instance-profile"
+  role = aws_iam_role.jenkins_role.name
+}
+
+resource "aws_iam_role_policy" "jenkins_eks_access" {
+  name = "jenkins-eks-access"
+  role = aws_iam_role.jenkins_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:DescribeNodegroup",
+          "eks:ListNodegroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Allow Jenkins to push/pull images from ECR 
+resource "aws_iam_role_policy_attachment" "jenkins_ecr_policy" {
+  role       = aws_iam_role.jenkins_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+}
+
+
+
 #EC2_instance for jenkins
 resource "aws_instance" "jenkins" {
-  ami           = "ami-019715e0d74f695be"   
+  ami           = "ami-019715e0d74f695be"
   instance_type = "t3.small"
   subnet_id     = aws_subnet.public_subnet_1.id
   key_name      = "ci-cd-key"
 
   vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
 
+  user_data = file("${path.module}/jenkins-user-data.sh")
+
+  iam_instance_profile = aws_iam_instance_profile.jenkins_profile.name
+
   tags = {
     Name = "jenkins-server"
   }
+}
+
+
+
+#ECR repository
+resource "aws_ecr_repository" "flask_app" {
+  name = "flask-app"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "flask-app-ecr"
+  }
+
+}
+
+
+#Allow Jenkins IAM role to authenticate to EKS
+resource "aws_eks_access_entry" "jenkins" {
+  cluster_name  = aws_eks_cluster.eks.name
+  principal_arn = aws_iam_role.jenkins_role.arn
+  type          = "STANDARD"
+}
+
+
+resource "aws_eks_access_policy_association" "jenkins_admin" {
+  cluster_name  = aws_eks_cluster.eks.name
+  principal_arn = aws_iam_role.jenkins_role.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [
+    aws_eks_access_entry.jenkins
+  ]
 }
