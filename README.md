@@ -2,7 +2,7 @@
 
 This is an end-to-end DevOps project where I automated application deployment on AWS using **Terraform, Jenkins, Docker, and Kubernetes (EKS).**
 
-The goal of this project was to build a real-world CI/CD pipeline similar to what is used in production environments.
+The goal of this project was to learn & understand how a CI/CD pipeline works similar to what is used in production environments.
 
 ---
 
